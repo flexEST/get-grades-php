@@ -1,22 +1,9 @@
-<?php
-header("ngrok-skip-browser-warning: true");
-header("Access-Control-Allow-Origin: *");
-
-$QAYIB_META = [
-    'İnformasiya texnologiyaları' => ['limit' => 13, 'hours' => 90, 'rule'  => '6–8 qayıb → 1 bal, 9–12 qayıb → 2 bal aparır', 'kesr'  => '13-cü qayıbda kəsr!'],
-    'Xarici dildə' => ['limit' => 11, 'hours' => 75, 'rule'  => '5–7 qayıb → 1 bal, 8–10 qayıb → 2 bal aparır', 'kesr'  => '11-ci qayıbda kəsr!'],
-    'Proqramlaşdırma' => ['limit' => 11, 'hours' => 75, 'rule'  => '5–7 qayıb → 1 bal, 8–10 qayıb → 2 bal aparır', 'kesr'  => '11-ci qayıbda kəsr!'],
-    'Diskret riyaziyyat' => ['limit' => 5, 'hours' => 30, 'rule'  => '3 qayıb → 1 bal, 4 qayıb → 2 bal aparır', 'kesr'  => '5-ci qayıbda kəsr!'],
-    'Diferensial tənliklər' => ['limit' => 5, 'hours' => 30, 'rule'  => '3 qayıb → 1 bal, 4 qayıb → 2 bal aparır', 'kesr'  => '5-ci qayıbda kəsr!'],
-    'Sahibkarlıq' => ['limit' => 5, 'hours' => 30, 'rule'  => '3 qayıb → 1 bal, 4 qayıb → 2 bal aparır', 'kesr'  => '5-ci qayıbda kəsr!'],
-];
-?>
 <!DOCTYPE html>
 <html lang="az" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>AzMİU – Tələbə Portalı</title>
+    <title>AzMİU – Tələbə Portalı (Qırılmaz Test)</title>
     <style>
         :root {
             --bg1:#0d1117; --bg2:#161b27;
@@ -76,7 +63,7 @@ $QAYIB_META = [
     <div class="main-card">
         <div class="app-header">
             <div class="header-title">Tələbə<span> Portalı</span></div>
-            <span style="font-size:0.75rem; background:var(--glass); padding:4px 10px; border-radius:20px; color:var(--text-2);">v1.1.2 (Qırılmaz AJAX)</span>
+            <span style="font-size:0.75rem; background:var(--glass); padding:4px 10px; border-radius:20px; color:var(--text-2);">Sandbox Mode (Qırılmaz)</span>
         </div>
 
         <div id="loginSection">
@@ -103,7 +90,15 @@ $QAYIB_META = [
 </div>
 
 <script>
-const QAYIB_META = <?php echo json_encode($QAYIB_META); ?>;
+// PHP-siz birbaşa JavaScript daxilində limit datası
+const QAYIB_META = {
+    'İnformasiya texnologiyaları': {limit: 13, hours: 90, rule: '6–8 qayıb → 1 bal, 9–12 qayıb → 2 bal aparır'},
+    'Xarici dildə': {limit: 11, hours: 75, rule: '5–7 qayıb → 1 bal, 8–10 qayıb → 2 bal aparır'},
+    'Proqramlaşdırma': {limit: 11, hours: 75, rule: '5–7 qayıb → 1 bal, 8–10 qayıb → 2 bal aparır'},
+    'Diskret riyaziyyat': {limit: 5, hours: 30, rule: '3 qayıb → 1 bal, 4 qayıb → 2 bal aparır'},
+    'Diferensial tənliklər': {limit: 5, hours: 30, rule: '3 qayıb → 1 bal, 4 qayıb → 2 bal aparır'},
+    'Sahibkarlıq': {limit: 5, hours: 30, rule: '3 qayıb → 1 bal, 4 qayıb → 2 bal aparır'}
+};
 
 function getMeta(name) {
     for (let key in QAYIB_META) {
@@ -209,7 +204,7 @@ document.getElementById('startBtn').onclick = async function() {
         }
     } catch (e) {
         document.getElementById('loadingOverlay').classList.remove('active');
-        errBox.textContent = "⚠️ Şəbəkə xətası! CORS və ya server bloku.";
+        errBox.textContent = "⚠️ Şəbəkə xətası! Sandbox bloklaması.";
         errBox.style.display = "block";
         console.error(e);
     }
