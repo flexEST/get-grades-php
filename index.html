@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bildiriş Konsolu</title>
+<link rel="icon" type="image/png" href="https://derscedveli.kesug.com/logo.png">
+<style>
+:root {
+    --bg1:#0d1117; --bg2:#161b27;
+    --glass:rgba(255,255,255,0.045); --glass-border:rgba(255,255,255,0.08); --glass-hover:rgba(255,255,255,0.07);
+    --amber:#f5a623; --amber-dim:rgba(245,166,35,0.15);
+    --blue:#3b82f6; --blue-dim:rgba(59,130,246,0.15);
+    --green:#22c55e; --red:#ef4444;
+    --text:#f1f5f9; --text-2:#94a3b8; --text-3:#475569;
+    --surface:rgba(255,255,255,0.04);
+    --radius-xl:28px; --radius-lg:20px; --radius-md:14px; --radius-sm:10px;
+    --shadow-card:0 32px 64px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.04) inset;
+}
+[data-theme="light"] {
+    --bg1:#f0f4ff; --bg2:#ffffff;
+    --glass:rgba(0,0,0,0.04); --glass-border:rgba(0,0,0,0.09); --glass-hover:rgba(0,0,0,0.06);
+    --amber:#d97706; --amber-dim:rgba(217,119,6,0.1);
+    --blue:#2563eb; --blue-dim:rgba(37,99,235,0.1);
+    --green:#16a34a; --red:#dc2626;
+    --text:#0f172a; --text-2:#475569; --text-3:#94a3b8;
+    --surface:rgba(0,0,0,0.03);
+    --shadow-card:0 16px 48px rgba(0,0,0,0.12),0 0 0 1px rgba(0,0,0,0.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg1); min-height:100vh;
+    display:flex; justify-content:center; align-items:flex-start;
+    padding:60px 12px 40px; position:relative; overflow-x:hidden;
+    transition:background 0.3s;
+}
+body::before{content:'';position:fixed;top:-120px;left:-80px;width:420px;height:420px;background:radial-gradient(circle,rgba(59,130,246,0.18) 0%,transparent 70%);border-radius:50%;pointer-events:none;animation:blobDrift 12s ease-in-out infinite alternate;}
+body::after{content:'';position:fixed;bottom:-100px;right:-60px;width:380px;height:380px;background:radial-gradient(circle,rgba(245,166,35,0.13) 0%,transparent 70%);border-radius:50%;pointer-events:none;animation:blobDrift 15s ease-in-out infinite alternate-reverse;}
+@keyframes blobDrift{from{transform:translate(0,0) scale(1);}to{transform:translate(30px,40px) scale(1.08);}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.8);}}
+@keyframes cardIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 12px rgba(59,130,246,0.6),0 4px 12px rgba(59,130,246,0.3);transform:scale(1);}50%{box-shadow:0 0 20px rgba(59,130,246,0.9),0 4px 16px rgba(59,130,246,0.5);transform:scale(1.02);}}
+
+.noise{position:fixed;inset:0;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none;z-index:0;}
+
+.main-card{position:relative;z-index:1;width:100%;max-width:440px;background:var(--bg2);border:1px solid var(--glass-border);border-radius:36px;padding:24px 20px 20px;box-shadow:var(--shadow-card);animation:cardIn 0.5s cubic-bezier(0.16,1,0.3,1);transition:background 0.3s,border-color 0.3s;}
+
+/* HEADER */
+.app-header{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
+.header-logo{width:50px;height:50px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 8px 24px -4px rgba(59,130,246,0.5);flex-shrink:0;overflow:hidden;}
+.header-logo img{width:50px;height:50px;border-radius:18px;object-fit:cover;}
+.header-right{display:flex;flex-direction:column;gap:2px;flex:1;}
+.header-top-row{display:flex;align-items:center;justify-content:space-between;}
+.header-title{font-size:1.4rem;font-weight:800;color:var(--text);line-height:1;letter-spacing:-0.5px;}
+.header-title span{color:var(--blue);}
+.header-sub{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.est-badge{background:linear-gradient(135deg,#eab308,#f5a623);color:#0d1117;font-size:0.7rem;font-weight:800;padding:3px 10px;border-radius:30px;letter-spacing:1.5px;}
+.theme-toggle{background:var(--glass);border:1px solid var(--glass-border);height:34px;border-radius:30px;padding:0 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;font-size:0.72rem;font-weight:700;color:var(--text);letter-spacing:0.3px;transition:background 0.2s,transform 0.2s;flex-shrink:0;white-space:nowrap;}
+.theme-toggle:active{transform:scale(0.95);}
+.theme-toggle:hover{background:var(--glass-hover);}
+.t-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background 0.3s;}
+[data-theme="dark"] .t-dot{background:#94a3b8;}
+[data-theme="light"] .t-dot{background:#f59e0b;}
+
+/* SECTION LABEL */
+.section-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--text-3);margin-top:4px;margin-bottom:8px;margin-left:4px;font-weight:600;}
+
+/* COMPOSE */
+.compose-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:20px 18px;margin-bottom:12px;position:relative;overflow:hidden;}
+.compose-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(59,130,246,0.1) 0%,transparent 70%);border-radius:50%;pointer-events:none;}
+.field{margin-bottom:10px;}
+.field label{font-size:0.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);font-weight:700;display:block;margin-bottom:5px;}
+.field input,.field textarea,.field select{width:100%;font-size:0.92rem;padding:10px 13px;background:var(--bg1);border:1px solid var(--glass-border);border-radius:var(--radius-md);color:var(--text);font-family:inherit;resize:none;outline:none;transition:border-color 0.2s;}
+.field select{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:32px;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(59,130,246,0.5);}
+.optional-tag{font-size:0.6rem;color:var(--text-3);font-weight:600;text-transform:none;letter-spacing:0;margin-left:6px;}
+.target-box{background:var(--blue-dim);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius-md);padding:12px 12px 2px;margin-bottom:12px;}
+.target-box .field label{color:var(--blue);}
+.target-hint{font-size:0.68rem;color:var(--text-2);margin:-4px 2px 10px;line-height:1.4;}
+.send-btn{width:100%;padding:14px 12px;border:none;border-radius:var(--radius-lg);font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;color:white;letter-spacing:0.2px;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);box-shadow:0 8px 20px -4px rgba(59,130,246,0.45);transition:transform 0.15s,filter 0.15s;}
+.send-btn:hover{filter:brightness(1.1);}
+.send-btn:active{transform:scale(0.97);filter:brightness(0.9);}
+.send-btn:disabled{opacity:0.6;cursor:not-allowed;}
+
+/* STATUS */
+.status-bar{margin-top:10px;padding:10px 14px;border-radius:var(--radius-md);font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--glass-border);color:var(--text-2);transition:all 0.25s;}
+.status-bar.ok{background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.25);color:var(--green);}
+.status-bar.err{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.25);color:var(--red);}
+.status-bar.sending{background:var(--amber-dim);border-color:rgba(245,166,35,0.25);color:var(--amber);}
+.s-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.status-bar.sending .s-dot{animation:pulse 1.4s ease-in-out infinite;}
+
+/* LOG BAR */
+.log-bar{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-xl);margin-bottom:12px;overflow:hidden;}
+.log-bar-header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;cursor:pointer;user-select:none;transition:background 0.2s;}
+.log-bar-header:hover{background:var(--glass-hover);}
+.log-bar-title{font-size:0.85rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.log-count{background:var(--blue-dim);border:1px solid rgba(59,130,246,0.2);color:var(--blue);font-size:0.68rem;font-weight:800;padding:2px 9px;border-radius:20px;}
+.log-actions{display:flex;align-items:center;gap:8px;}
+.log-clear{font-size:0.65rem;font-weight:700;color:var(--red);background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:3px 10px;border-radius:20px;cursor:pointer;font-family:inherit;}
+.log-clear:hover{background:rgba(239,68,68,0.2);}
+.log-chevron{color:var(--text-3);font-size:0.75rem;transition:transform 0.3s;}
+.log-chevron.open{transform:rotate(180deg);}
+.log-body{display:none;border-top:1px solid var(--glass-border);padding:10px 12px 14px;max-height:340px;overflow-y:auto;}
+.log-body.open{display:block;animation:fadeSlide 0.22s ease;}
+.log-item{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);margin-top:4px;background:var(--surface);border:1px solid var(--glass-border);cursor:pointer;transition:filter 0.15s,border-color 0.15s;}
+.log-item:hover{filter:brightness(1.1);border-color:rgba(59,130,246,0.35);}
+.log-item:active{filter:brightness(0.92);}
+.li-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.li-dot.ok{background:var(--green);}
+.li-dot.err{background:var(--red);}
+.li-info{flex:1;min-width:0;}
+.li-title-row{display:flex;align-items:center;gap:6px;}
+.li-title{font-size:0.83rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.li-type{font-size:0.6rem;font-weight:800;padding:1px 7px;border-radius:20px;background:var(--blue-dim);color:var(--blue);border:1px solid rgba(59,130,246,0.2);flex-shrink:0;text-transform:uppercase;letter-spacing:0.3px;}
+.li-target{font-size:0.6rem;font-weight:800;padding:1px 7px;border-radius:20px;background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.25);flex-shrink:0;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.li-body{font-size:0.7rem;color:var(--text-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.li-meta{font-size:0.62rem;color:var(--text-3);margin-top:3px;}
+.li-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.li-status{font-size:0.62rem;font-weight:700;padding:2px 8px;border-radius:20px;flex-shrink:0;align-self:flex-end;}
+.li-status.ok{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);}
+.li-status.err{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+.li-delete{width:24px;height:24px;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red);font-size:0.72rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background 0.15s,transform 0.15s;}
+.li-delete:hover{background:rgba(239,68,68,0.25);}
+.li-delete:active{transform:scale(0.9);}
+.log-empty{font-size:0.82rem;color:var(--text-3);padding:10px 4px;text-align:center;}
+
+/* SAVED */
+.saved-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:18px;margin-bottom:12px;}
+.saved-item{background:var(--bg1);border:1px solid var(--glass-border);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:7px;border-left:4px solid var(--blue);cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;transition:filter 0.15s;}
+.saved-item:hover{filter:brightness(1.08);}
+.saved-item:active{filter:brightness(0.92);}
+.saved-item:last-child{margin-bottom:0;}
+.si-name{font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:3px;}
+.si-preview{font-size:0.75rem;color:var(--text-2);}
+.load-btn{font-size:0.7rem;font-weight:700;padding:4px 12px;border-radius:20px;background:var(--blue-dim);border:1px solid rgba(59,130,246,0.2);color:var(--blue);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background 0.15s;}
+.load-btn:hover{background:rgba(59,130,246,0.25);}
+.saved-empty{font-size:0.82rem;color:var(--text-3);text-align:center;padding:10px 0;}
+
+/* FOOTER */
+.footer-area{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.footer-note{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;}
+.footer-note span{background:var(--glass);border:1px solid var(--glass-border);padding:4px 12px;border-radius:30px;font-size:0.72rem;color:var(--text-3);}
+.est-glow{display:inline-block;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:white;font-weight:800;padding:4px 16px;border-radius:30px;font-size:0.78rem;letter-spacing:4px;box-shadow:0 0 12px rgba(59,130,246,0.6),0 4px 12px rgba(59,130,246,0.3);animation:glowPulse 5s ease-in-out infinite;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--glass-border);border-radius:4px;}
+
+/* CONFIRM MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.modal-overlay.open{display:flex;animation:fadeSlide 0.18s ease;}
+.modal-box{width:100%;max-width:340px;background:var(--bg2);border:1px solid var(--glass-border);border-radius:24px;padding:22px 20px;box-shadow:var(--shadow-card);}
+.modal-title{font-size:1rem;font-weight:800;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.modal-msg{font-size:0.85rem;color:var(--text-2);line-height:1.5;margin-bottom:6px;}
+.modal-msg strong{color:var(--text);}
+.modal-actions{display:flex;gap:10px;margin-top:18px;}
+.modal-btn{flex:1;padding:11px 10px;border-radius:14px;font-family:inherit;font-size:0.85rem;font-weight:700;cursor:pointer;border:1px solid var(--glass-border);transition:filter 0.15s,transform 0.15s;}
+.modal-btn:active{transform:scale(0.96);}
+.modal-btn.cancel{background:var(--glass);color:var(--text);}
+.modal-btn.cancel:hover{background:var(--glass-hover);}
+.modal-btn.confirm{background:linear-gradient(135deg,#dc2626,#ef4444);color:white;border:none;}
+.modal-btn.confirm.blue{background:linear-gradient(135deg,#1d4ed8,#3b82f6);}
+.modal-btn.confirm:hover{filter:brightness(1.1);}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<div style="position:relative;width:100%;max-width:440px;">
+
+    <div style="position:absolute;top:-38px;right:4px;z-index:10;">
+        <div style="display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);padding:6px 12px;border-radius:30px;box-shadow:0 4px 18px rgba(59,130,246,0.5);">
+            <span style="width:6px;height:6px;background:white;border-radius:50%;display:inline-block;animation:pulse 1.8s ease-in-out infinite;flex-shrink:0;"></span>
+            <span style="font-size:0.68rem;font-weight:800;color:white;letter-spacing:0.3px;">v1.2.0</span>
+            <span style="width:1px;height:9px;background:rgba(255,255,255,0.3);display:inline-block;"></span>
+            <span style="font-size:0.68rem;font-weight:600;color:rgba(255,255,255,0.85);">Bildiriş Konsolu</span>
+        </div>
+    </div>
+
+    <div class="main-card">
+
+        <div class="app-header">
+            <div class="header-logo">
+                <img src="https://derscedveli.kesug.com/logo.png" alt="logo" onerror="this.style.display='none';this.parentElement.innerHTML='📡';">
+            </div>
+            <div class="header-right">
+                <div class="header-top-row">
+                    <div class="header-title">Bildiriş<span> Konsolu</span></div>
+                    <button class="theme-toggle" id="themeToggle">
+                        <span class="t-dot"></span>
+                        <span id="themeLabel">İşıq</span>
+                    </button>
+                </div>
+                <div class="header-sub">
+                    <span class="est-badge">ADMIN</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-label">📝 Bildiriş yaz</div>
+        <div class="compose-card">
+
+            <!-- HƏDƏF -->
+            <div class="target-box">
+                <div class="field">
+                    <label>🎯 Kimə göndərilsin</label>
+                    <select id="inp-target">
+                        <option value="all" selected>🌍 Bütün istifadəçilər</option>
+                        <option value="group">👥 Konkret qrup</option>
+                        <option value="university">🏛️ Konkret universitet</option>
+                        <option value="user">👤 Konkret istifadəçi</option>
+                    </select>
+                </div>
+                <div class="field" id="targetValueField" style="display:none;">
+                    <label id="targetValueLabel">Qrup</label>
+                    <select id="inp-target-value"></select>
+                </div>
+                <div class="target-hint" id="targetHint" style="display:none;"></div>
+            </div>
+
+            <div class="field">
+                <label>Növ (Kanal)</label>
+                <select id="inp-type">
+                    <option value="ders">📚 Dərs Bildirişləri</option>
+                    <option value="teqaud">💰 Təqaüd Bildirişləri</option>
+                    <option value="imtahan">📝 İmtahan Bildirişləri</option>
+                    <option value="hava">🌤️ Hava Proqnozu</option>
+                    <option value="serbestish">📄 Sərbəst İş Bildirişləri</option>
+                    <option value="netice">📊 İmtahan Nəticələri</option>
+                    <option value="diger" selected>📌 Digər</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Başlıq</label>
+                <input id="inp-title" placeholder="məs. İmtahan xəbərdarlığı" />
+            </div>
+            <div class="field">
+                <label>Mesaj <span class="optional-tag">(istəyə bağlı)</span></label>
+                <textarea id="inp-body" rows="3" placeholder="Bildiriş məzmunu... (boş qala bilər)"></textarea>
+            </div>
+            <div class="field">
+                <label>Şəkil URL</label>
+                <input id="inp-image" value="https://derscedveli.kesug.com/logo.png" />
+            </div>
+            <button class="send-btn" id="sendBtn" onclick="send()">🚀 Bildiriş Göndər</button>
+            <div class="status-bar" id="status">
+                <span class="s-dot"></span>
+                <span id="status-text">Gözlənilir...</span>
+            </div>
+        </div>
+
+        <div class="log-bar">
+            <div class="log-bar-header" id="logToggle">
+                <div class="log-bar-title">📋 Göndərmə jurnalı <span class="log-count" id="logCount">0</span></div>
+                <div class="log-actions">
+                    <span class="log-clear" id="logClear" onclick="clearAllLogs(event)">Təmizlə</span>
+                    <span class="log-chevron" id="logChevron">▼</span>
+                </div>
+            </div>
+            <div class="log-body" id="logBody">
+                <div class="log-empty" id="logEmpty">Hələ heç bir bildiriş göndərilməyib</div>
+                <div id="logList"></div>
+            </div>
+        </div>
+
+        <div class="section-label">💾 Hazır mesajlar</div>
+        <div class="saved-card">
+            <div id="savedList"></div>
+        </div>
+
+        <div class="footer-area">
+            <div class="footer-note"></div>
+            <div style="text-align:center;margin-top:4px;">
+                <span class="est-glow">E S T</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+        <div class="modal-title" id="confirmTitle">⚠️ Silinməni təsdiqləyin</div>
+        <div class="modal-msg" id="confirmMsg"></div>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" id="confirmCancel">Ləğv et</button>
+            <button class="modal-btn confirm" id="confirmOk">Bəli, sil</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────────────────────
+//  CONFIG
+// ────────────────────────────────────────────────────────────────
+// Cloud Function (sends the actual push)
+const ENDPOINT = "https://sendnotification-tclg6z2gia-uc.a.run.app";
+const SECRET   = "kamalcavidauye777";
+
+// Vercel API endpoint (proxies to Supabase with the service key)
+// Change this if your Vercel deployment has a different URL.
+const VERCEL_API = "/api/get-targets";
+
+const LOG_STORAGE_KEY = "nc-log-history";
+const MAX_LOGS = 200;
+
+const TYPE_LABELS = {
+    ders:        "Dərs",
+    teqaud:      "Təqaüd",
+    imtahan:     "İmtahan",
+    hava:        "Hava",
+    serbestish:  "Sərbəst İş",
+    netice:      "Nəticə",
+    diger:       "Digər"
+};
+
+const TARGET_LABELS = {
+    all:        "Hamı",
+    group:      "Qrup",
+    university: "Universitet",
+    user:       "İstifadəçi"
+};
+
+const TARGET_META = {
+    group:      { label: "Qrup",         placeholder: "məs. 845A5",              hint: "Yalnız bu qrupun cihazlarına gedəcək." },
+    university: { label: "Universitet",  placeholder: "Universitet adını seçin",   hint: "Yalnız bu universitetin cihazlarına gedəcək." },
+    user:       { label: "İstifadəçi adı (username)", placeholder: "məs. flexEST", hint: "Bu istifadəçinin bütün cihazlarına gedəcək." }
+};
+
+const PRESETS = [
+    {
+        name:  "Təqaüd",
+        type:  "teqaud",
+        title: "Təqaüdlər köçdü🎉",
+        body:  "AZMIU iyul,avqust və sentyabr aylarının təqaüdünü ödədi, xeyirli olsun! Bildirişin üstünə basaraq Birbank tətbiqini aça bilərsiniz",
+        image: ""
+    },
+    {
+        name:  "Fənn - cavablar",
+        type:  "ders",
+        title: "Cavablar açıqlandı❗",
+        body:  "{fənn} fənnindən cavablar açıqlandı! Tətbiqə daxil olub qiymətlər bölməsindən baxa bilərsiniz",
+        image: ""
+    }
+];
+
+let logs = [];
+let logOpen = false;
+let OPTIONS = { group: [], university: [], user: [] };
+
+// ── CONFIRM MODAL HELPER ──────────────────────────────────────────
+let pendingConfirmAction = null;
+const confirmModal  = document.getElementById("confirmModal");
+const confirmTitleEl = document.getElementById("confirmTitle");
+const confirmMsgEl  = document.getElementById("confirmMsg");
+const confirmOkBtn  = document.getElementById("confirmOk");
+const confirmCancelBtn = document.getElementById("confirmCancel");
+
+function askConfirm(message, onConfirm, opts) {
+    opts = opts || {};
+    confirmTitleEl.textContent = opts.title || "⚠️ Silinməni təsdiqləyin";
+    confirmOkBtn.textContent = opts.okText || "Bəli, sil";
+    confirmOkBtn.classList.toggle("blue", !!opts.blue);
+    confirmMsgEl.innerHTML = message;
+    pendingConfirmAction = onConfirm;
+    confirmModal.classList.add("open");
+}
+function closeConfirm() {
+    confirmModal.classList.remove("open");
+    pendingConfirmAction = null;
+}
+confirmCancelBtn.onclick = closeConfirm;
+confirmModal.addEventListener("click", (e) => { if (e.target === confirmModal) closeConfirm(); });
+confirmOkBtn.onclick = () => {
+    const fn = pendingConfirmAction;
+    closeConfirm();
+    if (typeof fn === "function") fn();
+};
+// ───────────────────────────────────────────────────────────────────
+
+function loadLogs() {
+    try {
+        const raw = localStorage.getItem(LOG_STORAGE_KEY);
+        logs = raw ? JSON.parse(raw) : [];
+    } catch (e) { logs = []; }
+}
+
+function saveLogs() {
+    try {
+        if (logs.length > MAX_LOGS) logs = logs.slice(logs.length - MAX_LOGS);
+        localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logs));
+    } catch (e) { console.error("Jurnal saxlanılmadı:", e); }
+}
+
+function clearAllLogs(e) {
+    e.stopPropagation();
+    if (!logs.length) return;
+    askConfirm("Bütün göndərmə jurnalını (<strong>" + logs.length + " bildiriş</strong>) silmək istədiyinizə əminsiniz? Bu əməliyyat geri qaytarıla bilməz.", () => {
+        logs = [];
+        saveLogs();
+        renderLogs();
+    });
+}
+
+function deleteLog(idx, e) {
+    if (e) e.stopPropagation();
+    const l = logs[idx];
+    if (!l) return;
+    askConfirm("<strong>" + escapeHtml(l.title) + "</strong> bildirişini jurnaldan silmək istədiyinizə əminsiniz?", () => {
+        logs.splice(idx, 1);
+        saveLogs();
+        renderLogs();
+    });
+}
+
+function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+}
+
+// Theme
+const html = document.documentElement;
+const stored = localStorage.getItem("nc-theme") || "dark";
+html.setAttribute("data-theme", stored);
+updateThemeBtn(stored);
+
+document.getElementById("themeToggle").onclick = () => {
+    const cur = html.getAttribute("data-theme");
+    const next = cur === "dark" ? "light" : "dark";
+    html.setAttribute("data-theme", next);
+    localStorage.setItem("nc-theme", next);
+    updateThemeBtn(next);
+};
+
+function updateThemeBtn(t) {
+    document.getElementById("themeLabel").textContent = t === "dark" ? "İşıq" : "Tünd";
+}
+
+document.getElementById("logToggle").onclick = () => {
+    logOpen = !logOpen;
+    document.getElementById("logBody").classList.toggle("open", logOpen);
+    document.getElementById("logChevron").classList.toggle("open", logOpen);
+};
+
+function setStatus(type, msg) {
+    const bar = document.getElementById("status");
+    bar.className = "status-bar" + (type !== "idle" ? " " + type : "");
+    document.getElementById("status-text").textContent = msg;
+}
+
+// ── TARGET (hədəf) ────────────────────────────────────────────────
+const targetSel   = document.getElementById("inp-target");
+const targetField = document.getElementById("targetValueField");
+const targetInput = document.getElementById("inp-target-value");
+const targetLabel = document.getElementById("targetValueLabel");
+const targetHint  = document.getElementById("targetHint");
+
+function applyTargetUI() {
+    const mode = targetSel.value;
+    if (mode === "all") {
+        targetField.style.display = "none";
+        targetHint.style.display = "none";
+        targetInput.innerHTML = "";
+        return;
+    }
+    const meta = TARGET_META[mode];
+    targetField.style.display = "";
+    targetHint.style.display = "";
+    targetLabel.textContent = meta.label;
+    targetHint.textContent = meta.hint;
+
+    const list = OPTIONS[mode] || [];
+    const placeholder = '<option value="">— ' + meta.label + ' seçin —</option>';
+    const opts = list.map(v => '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>').join("");
+    targetInput.innerHTML = placeholder + opts;
+    targetInput.disabled = list.length === 0;
+    if (!list.length) {
+        targetInput.innerHTML = '<option value="">— Yüklənir... —</option>';
+    }
+}
+targetSel.addEventListener("change", () => { targetInput.value = ""; applyTargetUI(); });
+
+async function loadTargetOptions() {
+    try {
+        // Call OUR OWN Vercel API — the service key stays on the server
+        const res = await fetch(VERCEL_API, {
+            method: "GET",
+            headers: { "x-admin-secret": SECRET }
+        });
+
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error("Vercel API error:", res.status, errText);
+            targetHint.textContent = "API xətası: " + res.status;
+            targetHint.style.display = "block";
+            targetInput.innerHTML = '<option value="">— Yüklənə bilmədi —</option>';
+            return;
+        }
+
+        const data = await res.json();  // { group: [...], university: [...], user: [...] }
+        OPTIONS.group      = data.group      || [];
+        OPTIONS.university = data.university || [];
+        OPTIONS.user       = data.user       || [];
+        applyTargetUI();
+    } catch (e) {
+        console.error("loadTargetOptions failed:", e);
+        targetHint.textContent = "Şəbəkə xətası: " + e.message;
+        targetHint.style.display = "block";
+        targetInput.innerHTML = '<option value="">— Şəbəkə xətası —</option>';
+    }
+}
+
+function targetText(t) {
+    if (!t || !t.mode || t.mode === "all") return TARGET_LABELS.all;
+    return TARGET_LABELS[t.mode] + ": " + t.value;
+}
+
+// ── LOGS ──────────────────────────────────────────────────────────
+function renderLogs() {
+    const list = document.getElementById("logList");
+    const empty = document.getElementById("logEmpty");
+    document.getElementById("logCount").textContent = logs.length;
+    if (!logs.length) { empty.style.display = "block"; list.innerHTML = ""; return; }
+    empty.style.display = "none";
+
+    const reversed = [...logs].map((l, idx) => ({ ...l, _idx: idx })).reverse();
+
+    list.innerHTML = reversed.map(l => `
+        <div class="log-item" onclick="loadLog(${l._idx})">
+            <div class="li-dot ${l.ok ? 'ok' : 'err'}"></div>
+            <div class="li-info">
+                <div class="li-title-row">
+                    <div class="li-title">${escapeHtml(l.title)}</div>
+                    <span class="li-type">${TYPE_LABELS[l.type] || l.type || '—'}</span>
+                    <span class="li-target">🎯 ${escapeHtml(targetText(l.target))}</span>
+                </div>
+                <div class="li-body">${escapeHtml(l.body)}</div>
+                <div class="li-meta">${l.time}${l.result ? " • " + escapeHtml(l.result) : ""}</div>
+            </div>
+            <div class="li-right">
+                <span class="li-status ${l.ok ? 'ok' : 'err'}">${l.ok ? "✔ Göndərildi" : "✖ Xəta"}</span>
+                <span class="li-delete" title="Sil" onclick="deleteLog(${l._idx}, event)">🗑</span>
+            </div>
+        </div>
+    `).join("");
+}
+
+function loadLog(idx) {
+    const l = logs[idx];
+    if (!l) return;
+    document.getElementById("inp-title").value = l.title || "";
+    document.getElementById("inp-body").value  = l.body  || "";
+    document.getElementById("inp-image").value = l.image || "https://derscedveli.kesug.com/logo.png";
+    if (l.type && TYPE_LABELS[l.type]) document.getElementById("inp-type").value = l.type;
+    if (l.target && l.target.mode) {
+        targetSel.value = l.target.mode;
+        applyTargetUI();
+        // Try to select the saved value if it exists in the dropdown
+        if (l.target.value) {
+            targetInput.value = l.target.value;
+            if (targetInput.value !== l.target.value) {
+                // value not in options; add it so it can still be sent
+                const opt = document.createElement("option");
+                opt.value = l.target.value;
+                opt.textContent = l.target.value + " (köhnə)";
+                targetInput.appendChild(opt);
+                targetInput.value = l.target.value;
+            }
+        }
+    }
+    setStatus("idle", "Jurnaldan yükləndi: " + l.title);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderPresets() {
+    const el = document.getElementById("savedList");
+    if (!PRESETS.length) { el.innerHTML = '<div class="saved-empty">Hazır mesaj yoxdur</div>'; return; }
+    el.innerHTML = PRESETS.map((p, i) => `
+        <div class="saved-item">
+            <div>
+                <div class="si-name">${p.name}</div>
+                <div class="si-preview">${p.title}</div>
+            </div>
+            <button class="load-btn" onclick="loadPreset(${i})">↑ Yüklə</button>
+        </div>
+    `).join("");
+}
+
+function loadPreset(i) {
+    const p = PRESETS[i];
+    document.getElementById("inp-title").value = p.title;
+    document.getElementById("inp-body").value  = p.body;
+    document.getElementById("inp-image").value = p.image;
+    if (p.type && TYPE_LABELS[p.type]) document.getElementById("inp-type").value = p.type;
+    setStatus("idle", "Yükləndi: " + p.name);
+}
+
+// ── SEND ──────────────────────────────────────────────────────────
+function send() {
+    const mode  = targetSel.value;
+    const tval  = targetInput.value.trim();
+    const title = document.getElementById("inp-title").value.trim();
+
+    if (!title) { setStatus("err", "Başlıq doldurulmalıdır"); return; }
+    if (mode !== "all" && !tval) { setStatus("err", TARGET_META[mode].label + " seçilməlidir"); return; }
+
+    // "Hamı" üçün təsdiq istə (səhvən hamıya getməsin)
+    if (mode === "all") {
+        askConfirm("Bildiriş <strong>bütün istifadəçilərə</strong> göndəriləcək. Davam edək?", doSend,
+            { title: "🌍 Hamıya göndərilsin?", okText: "Bəli, göndər", blue: true });
+    } else {
+        doSend();
+    }
+}
+
+async function doSend() {
+    const type  = document.getElementById("inp-type").value;
+    const title = document.getElementById("inp-title").value.trim();
+    const body  = document.getElementById("inp-body").value.trim();
+    const image = document.getElementById("inp-image").value.trim();
+    const mode  = targetSel.value;
+    const tval  = mode === "all" ? "" : targetInput.value.trim();
+    const target = { mode, value: tval };
+
+    const btn = document.getElementById("sendBtn");
+    btn.disabled = true;
+    setStatus("sending", "Göndərilir...");
+    const now = new Date().toLocaleString("az", { day:"2-digit", month:"2-digit", hour: "2-digit", minute: "2-digit" });
+
+    const payloadData = {
+        secret: SECRET,
+        title: title,
+        message: body,
+        body: body,
+        image: image,
+        type: type,
+        notification_type: type,
+        priority: "high",
+        target: target,
+        android: { notification: { channel_id: type } }
+    };
+
+    try {
+        const res = await fetch(ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payloadData)
+        });
+        const ok = res.ok;
+        const text = await res.text();
+
+        let result = "";
+        if (ok) {
+            try {
+                const j = JSON.parse(text);
+                if (j.devices !== undefined) result = j.success + "/" + j.devices + " cihaz";
+                else result = "topic: hamı";
+            } catch (e) {}
+        }
+
+        logs.push({ type, title, body, image, target, time: now, ok, result, err: ok ? "" : text });
+        saveLogs();
+        setStatus(ok ? "ok" : "err",
+            ok ? "✔ Uğurla göndərildi" + (result ? " (" + result + ")" : "") : "✖ " + text);
+        if (ok && !logOpen) {
+            logOpen = true;
+            document.getElementById("logBody").classList.add("open");
+            document.getElementById("logChevron").classList.add("open");
+        }
+    } catch(e) {
+        logs.push({ type, title, body, image, target, time: now, ok: false, err: e.message });
+        saveLogs();
+        setStatus("err", "✖ Şəbəkə xətası — CORS / Cloud Run yoxlayın");
+    }
+    btn.disabled = false;
+    renderLogs();
+}
+
+loadLogs();
+renderPresets();
+renderLogs();
+applyTargetUI();
+loadTargetOptions();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"4.11.0","token":"af00bcbd309f49698ad82308abfb8a26","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
