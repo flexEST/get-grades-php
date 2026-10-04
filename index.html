@@ -174,7 +174,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-60px;width:380px;heig
     <div style="position:absolute;top:-38px;right:4px;z-index:10;">
         <div style="display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);padding:6px 12px;border-radius:30px;box-shadow:0 4px 18px rgba(59,130,246,0.5);">
             <span style="width:6px;height:6px;background:white;border-radius:50%;display:inline-block;animation:pulse 1.8s ease-in-out infinite;flex-shrink:0;"></span>
-            <span style="font-size:0.68rem;font-weight:800;color:white;letter-spacing:0.3px;">v1.2.0</span>
+            <span style="font-size:0.68rem;font-weight:800;color:white;letter-spacing:0.3px;">v1.3.0</span>
             <span style="width:1px;height:9px;background:rgba(255,255,255,0.3);display:inline-block;"></span>
             <span style="font-size:0.68rem;font-weight:600;color:rgba(255,255,255,0.85);">Bildiriş Konsolu</span>
         </div>
@@ -470,48 +470,83 @@ function applyTargetUI() {
     }
     const meta = TARGET_META[mode];
     targetField.style.display = "";
-    targetHint.style.display = "";
     targetLabel.textContent = meta.label;
-    targetHint.textContent = meta.hint;
 
     const list = OPTIONS[mode] || [];
-    const placeholder = '<option value="">— ' + meta.label + ' seçin —</option>';
-    const opts = list.map(v => '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>').join("");
-    targetInput.innerHTML = placeholder + opts;
-    targetInput.disabled = list.length === 0;
-    if (!list.length) {
-        targetInput.innerHTML = '<option value="">— Yüklənir... —</option>';
+    if (list.length) {
+        // We have options — show them and hide the hint
+        const placeholder = '<option value="">— ' + meta.label + ' seçin —</option>';
+        const opts = list.map(v => '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>').join("");
+        targetInput.innerHTML = placeholder + opts;
+        targetInput.disabled = false;
+        targetHint.style.display = "none";
+        targetHint.textContent = "";
+    } else {
+        // No options yet — DON'T touch innerHTML, DON'T touch targetHint,
+        // let loadTargetOptions() decide what to show.
+        targetInput.disabled = true;
     }
 }
 targetSel.addEventListener("change", () => { targetInput.value = ""; applyTargetUI(); });
 
 async function loadTargetOptions() {
+    // Show the raw URL we're about to hit so we can see it in DevTools
+    console.log("[loadTargetOptions] URL:", VERCEL_API);
+
     try {
-        // Call OUR OWN Vercel API — the service key stays on the server
         const res = await fetch(VERCEL_API, {
             method: "GET",
             headers: { "x-admin-secret": SECRET }
         });
 
+        console.log("[loadTargetOptions] status:", res.status);
+        console.log("[loadTargetOptions] content-type:", res.headers.get("content-type"));
+
+        // Read the raw body FIRST, whatever it is
+        const rawBody = await res.text();
+        console.log("[loadTargetOptions] raw body (first 300 chars):", rawBody.slice(0, 300));
+
         if (!res.ok) {
-            const errText = await res.text();
-            console.error("Vercel API error:", res.status, errText);
-            targetHint.textContent = "API xətası: " + res.status;
+            targetHint.textContent = "API " + res.status + ": " + rawBody.slice(0, 120);
             targetHint.style.display = "block";
-            targetInput.innerHTML = '<option value="">— Yüklənə bilmədi —</option>';
+            targetInput.innerHTML = '<option value="">— API ' + res.status + ' —</option>';
             return;
         }
 
-        const data = await res.json();  // { group: [...], university: [...], user: [...] }
-        OPTIONS.group      = data.group      || [];
-        OPTIONS.university = data.university || [];
-        OPTIONS.user       = data.user       || [];
+        // Try to parse JSON
+        let data;
+        try {
+            data = JSON.parse(rawBody);
+        } catch (parseErr) {
+            console.error("[loadTargetOptions] JSON parse failed:", parseErr);
+            targetHint.textContent = "Cavab JSON deyil. Server HTML qaytardı.";
+            targetHint.style.display = "block";
+            targetInput.innerHTML = '<option value="">— JSON deyil —</option>';
+            return;
+        }
+
+        console.log("[loadTargetOptions] parsed data:", data);
+
+        // Sanity check
+        if (!data || typeof data !== "object") {
+            targetHint.textContent = "Cavab boşdur.";
+            targetHint.style.display = "block";
+            targetInput.innerHTML = '<option value="">— Boş cavab —</option>';
+            return;
+        }
+
+        OPTIONS.group      = Array.isArray(data.group) ? data.group : [];
+        OPTIONS.university = Array.isArray(data.university) ? data.university : [];
+        OPTIONS.user       = Array.isArray(data.user) ? data.user : [];
+
+        console.log("[loadTargetOptions] OPTIONS:", OPTIONS);
+
         applyTargetUI();
     } catch (e) {
-        console.error("loadTargetOptions failed:", e);
-        targetHint.textContent = "Şəbəkə xətası: " + e.message;
+        console.error("[loadTargetOptions] fetch threw:", e);
+        targetHint.textContent = "Fetch xətası: " + (e && e.message ? e.message : String(e));
         targetHint.style.display = "block";
-        targetInput.innerHTML = '<option value="">— Şəbəkə xətası —</option>';
+        targetInput.innerHTML = '<option value="">— Fetch xətası —</option>';
     }
 }
 
